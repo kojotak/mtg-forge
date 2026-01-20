@@ -897,4 +897,34 @@ public class SpellAbilityPickerSimulationTest extends SimulationTest {
         game.getAction().checkStateEffects(true);
         AssertJUnit.assertNull(picker.chooseSpellAbilityToPlay(null));
     }
+
+    @Test
+    public void testCastShapeAnew() {
+        Game game = initAndCreateGame();
+        Player ai = game.getPlayers().get(1);
+        ai.setTeam(0);
+
+        Player opponent = game.getPlayers().get(0);
+        opponent.setTeam(1);
+
+        Card shapeAnew = addCardToZone("Shape Anew", ai, ZoneType.Hand);
+        addCardToZone("Portal to Phyrexia", ai, ZoneType.Hand);
+        addCardToZone("Spell Snare", ai, ZoneType.Hand);
+
+        Card batterskull = addCardToZone("Batterskull", ai, ZoneType.Library);
+
+        addCard("Breeding Pool", ai);
+        addCard("Snow-Covered Island", ai);
+        addCard("Ketria Triome", ai);
+        addCard("Stomping Ground", ai);
+        addCard("Wrenn and Six", ai);
+        addToken("c_a_treasure_sac", ai);
+        addToken("c_a_food_sac", ai);
+
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN2, ai);
+        game.getPhaseHandler().onStackResolved(); // doesn't work without this line - why?
+        playUntilPhase(game, PhaseType.END_OF_TURN);
+        AssertJUnit.assertTrue("Shape Anew brought Batterskull to battlefield", ai.getZone(ZoneType.Battlefield).contains(batterskull));
+        AssertJUnit.assertTrue(ai.getZone(ZoneType.Graveyard).contains(shapeAnew));
+    }
 }
