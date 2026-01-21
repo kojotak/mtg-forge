@@ -913,11 +913,18 @@ public class SpellAbilityPickerSimulationTest extends SimulationTest {
 
         Card batterskull = addCardToZone("Batterskull", ai, ZoneType.Library);
 
+        Card boseiju = addCard("Boseiju, Who Endures", ai);
+        boseiju.setTapped(true);
+        Card pool = addCard("Breeding Pool", ai);
+        pool.setTapped(true);
         addCard("Breeding Pool", ai);
+        Card mountain = addCard("Snow-Covered Mountain", ai);
+        mountain.setTapped(true);
         addCard("Snow-Covered Island", ai);
         addCard("Ketria Triome", ai);
         addCard("Stomping Ground", ai);
         addCard("Wrenn and Six", ai);
+        addCard("Ragavan, Nimble Pilferer", ai);
         addToken("c_a_treasure_sac", ai);
         addToken("c_a_food_sac", ai);
 
