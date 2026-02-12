@@ -18,19 +18,16 @@
 package forge.gamemodes.quest;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import forge.gamemodes.quest.data.QuestPreferences;
 import forge.gamemodes.quest.data.QuestPreferences.DifficultyPrefs;
 import forge.gamemodes.quest.data.QuestPreferences.QPref;
 import forge.gamemodes.quest.io.QuestDuelReader;
 import forge.model.FModel;
 import forge.util.MyRandom;
-import forge.util.maps.EnumMapOfLists;
-import forge.util.maps.MapOfLists;
 import forge.util.storage.IStorage;
 import forge.util.storage.StorageBase;
 
@@ -42,7 +39,7 @@ import forge.util.storage.StorageBase;
  */
 public class QuestEventDuelManager implements QuestEventDuelManagerInterface {
 
-    private final MapOfLists<QuestEventDifficulty, QuestEventDuel> sortedDuels = new EnumMapOfLists<>(QuestEventDifficulty.class, ArrayList::new);
+    private final Multimap<QuestEventDifficulty, QuestEventDuel> sortedDuels = MultimapBuilder.enumKeys(QuestEventDifficulty.class).arrayListValues().build();
     private final IStorage<QuestEventDuel> allDuels;
 
     /**
@@ -218,17 +215,14 @@ public class QuestEventDuelManager implements QuestEventDuelManagerInterface {
      * Assemble duel deck difficulty lists
      */
     private void assembleDuelDifficultyLists() {
-
         sortedDuels.clear();
-        sortedDuels.put(QuestEventDifficulty.EASY, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.MEDIUM, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.HARD, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.EXPERT, new ArrayList<>());
-
-        for (final QuestEventDuel qd : allDuels) {
-            sortedDuels.add(qd.getDifficulty(), qd);
+        for(QuestEventDifficulty difficulty : EnumSet.of(QuestEventDifficulty.EASY, QuestEventDifficulty.MEDIUM, QuestEventDifficulty.HARD, QuestEventDifficulty.EXPERT)){
+            sortedDuels.putAll(difficulty, List.of());
         }
 
+        for (final QuestEventDuel qd : allDuels) {
+            sortedDuels.put(qd.getDifficulty(), qd);
+        }
     }
 
     /** */

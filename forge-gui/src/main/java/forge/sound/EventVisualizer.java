@@ -1,5 +1,6 @@
 package forge.sound;
 
+import com.google.common.collect.Multimap;
 import forge.LobbyPlayer;
 import forge.game.card.Card;
 import forge.game.event.*;
@@ -11,7 +12,6 @@ import forge.gui.events.UiEventAttackerDeclared;
 import forge.gui.events.UiEventBlockerAssigned;
 import forge.gui.events.UiEventNextGameDecision;
 import forge.util.TextUtil;
-import forge.util.maps.MapOfLists;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -100,12 +100,11 @@ public class EventVisualizer extends IGameEventVisitor.Base<SoundEffectType> imp
             return null; // already played sounds in interactive mode
         }
 
-        for (final MapOfLists<Card, Card> ab : event.blockers().values()) {
-            for(final Collection<Card> bb : ab.values()) {
-                if ( !bb.isEmpty() ) {
-                    // hasAnyBlocker = true;
-                    return SoundEffectType.Block;
-                }
+        for (final Multimap<Card, Card> ab : event.blockers().values()) {
+            final Collection<Card> blockers = ab.values();
+            if ( !blockers.isEmpty() ) {
+                // hasAnyBlocker = true;
+                return SoundEffectType.Block;
             }
         }
         return null;

@@ -17,11 +17,10 @@
  */
 package forge.gamemodes.quest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import forge.deck.CardArchetypeLDAGenerator;
 import forge.deck.io.Archetype;
 import forge.game.GameFormat;
@@ -30,8 +29,6 @@ import forge.gamemodes.quest.data.QuestPreferences.DifficultyPrefs;
 import forge.gamemodes.quest.data.QuestPreferences.QPref;
 import forge.model.FModel;
 import forge.util.MyRandom;
-import forge.util.maps.EnumMapOfLists;
-import forge.util.maps.MapOfLists;
 
 /**
  * QuestEventManager.
@@ -42,7 +39,7 @@ import forge.util.maps.MapOfLists;
 public class QuestEventLDADuelManager implements QuestEventDuelManagerInterface {
 
     private List<Archetype> archetypes;
-    private final MapOfLists<QuestEventDifficulty, QuestEventDuel> sortedDuels = new EnumMapOfLists<>(QuestEventDifficulty.class, ArrayList::new);
+    private final Multimap<QuestEventDifficulty, QuestEventDuel> sortedDuels = MultimapBuilder.enumKeys(QuestEventDifficulty.class).arrayListValues().build();
     private GameFormat baseFormat;
 
     public QuestEventLDADuelManager(GameFormat baseFormat){
@@ -54,10 +51,9 @@ public class QuestEventLDADuelManager implements QuestEventDuelManagerInterface 
     private void assembleDuelDifficultyLists() {
 
         sortedDuels.clear();
-        sortedDuels.put(QuestEventDifficulty.EASY, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.MEDIUM, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.HARD, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.EXPERT, new ArrayList<>());
+        for (QuestEventDifficulty difficulty : EnumSet.of(QuestEventDifficulty.EASY, QuestEventDifficulty.MEDIUM, QuestEventDifficulty.HARD, QuestEventDifficulty.EXPERT)) {
+            sortedDuels.putAll(difficulty, List.of());
+        }
 
         int i=0;
         for(Archetype archetype : archetypes){
@@ -75,7 +71,7 @@ public class QuestEventLDADuelManager implements QuestEventDuelManagerInterface 
                 diff = QuestEventDifficulty.MEDIUM;
             }
             duel.setDifficulty(diff);
-            sortedDuels.add(diff, duel);
+            sortedDuels.put(diff, duel);
             i++;
         }
 

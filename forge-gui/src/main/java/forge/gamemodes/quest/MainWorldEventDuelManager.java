@@ -6,20 +6,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import forge.gamemodes.quest.data.QuestPreferences;
 import forge.gamemodes.quest.data.QuestPreferences.DifficultyPrefs;
 import forge.gamemodes.quest.data.QuestPreferences.QPref;
 import forge.gamemodes.quest.io.MainWorldDuelReader;
 import forge.model.FModel;
 import forge.util.MyRandom;
-import forge.util.maps.EnumMapOfLists;
-import forge.util.maps.MapOfLists;
 import forge.util.storage.IStorage;
 import forge.util.storage.StorageBase;
 
 public class MainWorldEventDuelManager implements QuestEventDuelManagerInterface {
 
-    protected final MapOfLists<QuestEventDifficulty, QuestEventDuel> sortedDuels = new EnumMapOfLists<>(QuestEventDifficulty.class, ArrayList::new);
+    protected final Multimap<QuestEventDifficulty, QuestEventDuel> sortedDuels = MultimapBuilder.enumKeys(QuestEventDifficulty.class).arrayListValues().build();
     protected final IStorage<QuestEventDuel> allDuels;
 
     /**
@@ -240,18 +240,14 @@ public class MainWorldEventDuelManager implements QuestEventDuelManagerInterface
      * Assemble duel deck difficulty lists
      */
     protected void assembleDuelDifficultyLists() {
-
         sortedDuels.clear();
-        sortedDuels.put(QuestEventDifficulty.EASY, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.MEDIUM, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.HARD, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.EXPERT, new ArrayList<>());
-        sortedDuels.put(QuestEventDifficulty.WILD, new ArrayList<>());
-
-        for (final QuestEventDuel qd : allDuels) {
-            sortedDuels.add(qd.getDifficulty(), qd);
+        for (QuestEventDifficulty difficulty : QuestEventDifficulty.values()) {
+            sortedDuels.putAll(difficulty, List.of());
         }
 
+        for (final QuestEventDuel qd : allDuels) {
+            sortedDuels.put(qd.getDifficulty(), qd);
+        }
     }
 
     /** */
