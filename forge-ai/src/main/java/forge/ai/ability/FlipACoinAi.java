@@ -1,9 +1,7 @@
 package forge.ai.ability;
 
-import forge.ai.AiAbilityDecision;
-import forge.ai.AiPlayDecision;
-import forge.ai.ComputerUtil;
-import forge.ai.SpellAbilityAi;
+import forge.ai.*;
+import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
@@ -52,6 +50,14 @@ public class FlipACoinAi extends SpellAbilityAi {
                     }
             	}
             	return new AiAbilityDecision(0, AiPlayDecision.CantPlayAi);
+            } else if (ailogic.equals("InvertPolarity")) {
+                SpellAbilityAi counter = SpellApiToAi.Converter.get(ApiType.Counter);
+                if (counter.canPlayWithSubs(ai, sa).willingToPlay()) {
+                    return new AiAbilityDecision(100, AiPlayDecision.WillPlay);
+                }
+
+                //TODO check the SpellApiToAi.Converter.get(ApiType.GainControl) as well?
+                //TODO how to select new target if we win the flip?
             }
         }
         if (sa.isTargetNumberValid()) {
