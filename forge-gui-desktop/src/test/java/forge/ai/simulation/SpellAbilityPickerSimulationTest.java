@@ -897,4 +897,52 @@ public class SpellAbilityPickerSimulationTest extends SimulationTest {
         game.getAction().checkStateEffects(true);
         AssertJUnit.assertNull(picker.chooseSpellAbilityToPlay(null));
     }
+
+    @Test
+    public void testPlayViolentOutburstForCascadeEffect() {
+        Game game = initAndCreateGame();
+        Player p = game.getPlayers().get(1);
+        p.setLife(1, null);
+        Player opponent = game.getPlayers().get(0);
+        opponent.setLife(1, null);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN2, p);
+
+        addCards("Forest", 2, p);
+        addCards("Mountain", 2, p);
+        addCardToZone("Violent Outburst", p, ZoneType.Hand);
+        addCardToZone("Forest", p, ZoneType.Library);
+        addCardToZone("Living End", p, ZoneType.Library);
+        addCardToZone("Mountain", p, ZoneType.Library);
+        addCardToZone("Oliphaunt", p, ZoneType.Graveyard);
+
+        game.getAction().checkStateEffects(true);
+
+        SpellAbilityPicker picker = new SpellAbilityPicker(game, p);
+        SpellAbility sa = picker.chooseSpellAbilityToPlay(null);
+        AssertJUnit.assertNotNull(sa);
+    }
+
+    @Test
+    public void testDoNotPlayViolentOutburstIfThereIsNothingInLibraryToCascadeInto() {
+        Game game = initAndCreateGame();
+        Player p = game.getPlayers().get(1);
+        p.setLife(1, null);
+        Player opponent = game.getPlayers().get(0);
+        opponent.setLife(1, null);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN2, p);
+
+        addCards("Forest", 2, p);
+        addCards("Mountain", 2, p);
+        addCardToZone("Violent Outburst", p, ZoneType.Hand);
+        addCardToZone("Forest", p, ZoneType.Library);
+        addCardToZone("Demonic Dread", p, ZoneType.Library); //CMC >= 3, so won't cascade into this
+        addCardToZone("Mountain", p, ZoneType.Library);
+        addCardToZone("Oliphaunt", p, ZoneType.Graveyard);
+
+        game.getAction().checkStateEffects(true);
+
+        SpellAbilityPicker picker = new SpellAbilityPicker(game, p);
+        SpellAbility sa = picker.chooseSpellAbilityToPlay(null);
+        AssertJUnit.assertNull(sa);
+    }
 }
