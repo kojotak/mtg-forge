@@ -303,6 +303,15 @@ public class PermanentAi extends SpellAbilityAi {
                         dontCast = true;
                         break; // limit casting to a specific zone only
                     }
+                } else if (param.equals("MustHaveAtLeastCardsInGraveyard")) {
+                    long cardsInGraveyard = ai.getCardsIn(ZoneType.Graveyard).size();
+                    if (cardsInGraveyard < Integer.parseInt(value)) {
+                        // not enough cards in graveyard
+                        dontCast = true;
+                    }
+                } else if (param.equals("ExistCardsWithPayableCost")) {
+                    //TODO check for available mana
+                    //CardLists.filter(ai.getCardsIn(ZoneType.Graveyard), CardPredicates.NON_LANDS).stream().map(Card::getManaCost)
                 }
             }
 
