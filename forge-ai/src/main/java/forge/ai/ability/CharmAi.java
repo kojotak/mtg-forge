@@ -29,6 +29,7 @@ public class CharmAi extends SpellAbilityAi {
             num = AbilityUtils.calculateAmount(source, sa.getParamOrDefault("CharmNum", "1"), sa);
             min = sa.hasParam("MinCharmNum") ? AbilityUtils.calculateAmount(source, sa.getParam("MinCharmNum"), sa) : num;
         }
+        final boolean allowRepeat = Boolean.parseBoolean(sa.getParamOrDefault("CanRepeatModes", "false"));
 
         boolean timingRight = sa.isTrigger(); //is there a reason to play the charm now?
         boolean choiceForOpp = !ai.equals(sa.getActivatingPlayer());
@@ -60,14 +61,14 @@ public class CharmAi extends SpellAbilityAi {
              * bonus choice(s) for the AI otherwise it might be too hard to ever fulfil
              * minimum choice requirements with canPlayAi() alone.
              */
-            chosenList = min > 1 ? chooseMultipleOptionsAi(choices, ai, min)
-                    : chooseOptionsAi(sa, choices, ai, timingRight, num, min);
+            chosenList = min > 1 ? chooseMultipleOptionsAi(choices, ai, min, allowRepeat)
+                    : chooseOptionsAi(sa, choices, ai, timingRight, num, min, allowRepeat);
         }
 
         if (chosenList.isEmpty()) {
             if (timingRight) {
                 // Set minimum choices for triggers where chooseMultipleOptionsAi() returns null
-                chosenList = chooseOptionsAi(sa, choices, ai, true, num, min);
+                chosenList = chooseOptionsAi(sa, choices, ai, true, num, min, allowRepeat);
                 if (chosenList.isEmpty() && min != 0) {
                     return new AiAbilityDecision(0, AiPlayDecision.CantPlayAi);
                 }
@@ -91,11 +92,9 @@ public class CharmAi extends SpellAbilityAi {
         return super.checkApiLogic(ai, sa);
     }
 
-    private List<AbilitySub> chooseOptionsAi(SpellAbility sa, List<AbilitySub> choices, final Player ai, boolean isTrigger, int num, int min) {
+    private List<AbilitySub> chooseOptionsAi(SpellAbility sa, List<AbilitySub> choices, final Player ai, boolean isTrigger, int num, int min, boolean allowRepeat) {
         List<AbilitySub> chosenList = Lists.newArrayList();
         AiController aic = ((PlayerControllerAi) ai.getController()).getAi();
-        // TODO unused for now, the AI doesn't know how to effectively handle repeated choices
-        boolean allowRepeat = sa.hasParam("CanRepeatModes");
 
         // Pawprint
         final int pawprintLimit = sa.hasParam("Pawprint") ? AbilityUtils.calculateAmount(sa.getHostCard(), sa.getParam("Pawprint"), sa) : 0;
@@ -243,26 +242,31 @@ public class CharmAi extends SpellAbilityAi {
     }
 
     // Choice selection for charms that require multiple choices (eg. Cryptic Command, DTK commands)
-    private List<AbilitySub> chooseMultipleOptionsAi(List<AbilitySub> choices, final Player ai, int min) {
+    private List<AbilitySub> chooseMultipleOptionsAi(List<AbilitySub> choices, final Player ai, int min, boolean allowRepeat) {
         AbilitySub goodChoice = null;
         List<AbilitySub> chosenList = Lists.newArrayList();
         AiController aic = ((PlayerControllerAi) ai.getController()).getAi();
-        for (AbilitySub sub : choices) {
-            sub.setActivatingPlayer(ai);
-            // Assign generic good choice to fill up choices if necessary 
-            if ("Good".equals(sub.getParam("AILogic")) && aic.doTrigger(sub, false)) {
-                goodChoice = sub;
-            } else {
-                // Standard canPlayAi()
+        boolean choiceAdded;
+        do {
+            choiceAdded = false;
+            for (AbilitySub sub : choices) {
                 sub.setActivatingPlayer(ai);
-                if (AiPlayDecision.WillPlay == aic.canPlaySa(sub)) {
-                    chosenList.add(sub);
-                    if (chosenList.size() == min) {
-                        break; // enough choices
+                // Assign generic good choice to fill up choices if necessary
+                if ("Good".equals(sub.getParam("AILogic")) && aic.doTrigger(sub, false)) {
+                    goodChoice = sub;
+                } else {
+                    // Standard canPlayAi()
+                    sub.setActivatingPlayer(ai);
+                    if (AiPlayDecision.WillPlay == aic.canPlaySa(sub)) {
+                        choiceAdded = chosenList.add(sub);
+                        if (chosenList.size() == min) {
+                            break; // enough choices
+                        }
                     }
                 }
             }
-        }
+        } while (allowRepeat && chosenList.size() < min && choiceAdded);
+
         // Add generic good choice if one more choice is needed
         if (chosenList.size() == min - 1 && goodChoice != null) {
             chosenList.add(0, goodChoice);  // hack to make Dromoka's Command fight targets work
